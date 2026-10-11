@@ -1,71 +1,144 @@
 import path from "node:path";
-import os from "node:os";
 import fs from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import extract from "extract-zip";
+import { appDir, publicUrl } from "../config.js";
+import { log } from "../logger.js";
+import { PipelineError } from "../lib/errors.js";
 import { detectProject } from "../services/projectDetector.js";
 import { runBuild } from "../services/buildRunner.js";
-
-// Where each upload gets unzipped. One fresh folder per request.
-const WORK_DIR = path.join(os.tmpdir(), "deployments");
+import { startApp } from "../services/projectStarter.js";
 
 export async function createDeployment(req, res) {
-  let workDir;
+  let deployDir;
+  let keepFiles = false;
 
   try {
-    // 1. Validate the request. Multer already saved the file and filled req.file.
+    // 1. Validate the request.
     if (!req.file) {
       return res.status(400).json({
         error: "Upload a .zip file in the form field 'project'",
       });
     }
 
-    // 2. Extract into a folder whose name we generate ourselves.
-    //    The client's filename is never used to build a path.
-    const id = randomUUID();
-    workDir = path.join(WORK_DIR, id);
-    await extract(req.file.path, { dir: workDir });
+    // Optional env vars for the deployed app, sent as a JSON string in the 'env' field.
+    let env = {};
+    if (req.body?.env) {
+      try {
+        env = JSON.parse(req.body.env);
+        if (typeof env !== "object" || env === null || Array.isArray(env)) {
+          throw new Error("env must be a JSON object");
+        }
+      } catch {
+        return res.status(400).json({
+          error: "Field 'env' must be a JSON object, e.g. {\"KEY\":\"value\"}",
+        });
+      }
+    }
 
-    // 3. If the zip holds one top-level folder, build from inside it.
-    //    Ignore __MACOSX, which macOS adds to zips.
-    const entries = (await fs.readdir(workDir, { withFileTypes: true }))
+    // 2. Extract.
+    const id = randomUUID();
+    deployDir = appDir(id);
+    await extract(req.file.path, { dir: deployDir });
+
+    // 3. Find the project root (single top-level folder, ignoring __MACOSX).
+    const entries = (await fs.readdir(deployDir, { withFileTypes: true }))
       .filter((e) => e.name !== "__MACOSX");
 
     const projectPath =
       entries.length === 1 && entries[0].isDirectory()
-        ? path.join(workDir, entries[0].name)
-        : workDir;
+        ? path.join(deployDir, entries[0].name)
+        : deployDir;
 
-    // 4. Detect
+    // 4. Detect.
     const detected = await detectProject(projectPath);
 
     if (detected.error || detected.runtime === "unknown") {
+      return res.status(422).json({ id, status: "failed", stage: "detection", detected });
+    }
+
+    // 5. Build.
+    const build = await runBuild(projectPath, detected);
+
+    if (!build.success) {
+      return res.status(200).json({
+        id,
+        project: req.file.originalname,
+        status: "failed",
+        stage: "build",
+        detected,
+        build,
+      });
+    }
+
+    // 6. Start. Static sites have no process.
+    if (detected.runtime === "static") {
+      keepFiles = true;
+      return res.status(201).json({
+        id,
+        project: req.file.originalname,
+        status: "running",
+        url: publicUrl(id.slice(0, 8)),
+        detected,
+        build,
+      });
+    }
+
+    if (!detected.startCommand) {
       return res.status(422).json({
         id,
         status: "failed",
         stage: "detection",
+        error: "No start command detected for this project",
         detected,
       });
     }
 
-    // 5. Build
-    const build = await runBuild(projectPath, detected);
+    // startApp expects { command, args }: "npm start" -> { command: "npm", args: ["start"] }
+    const [command, ...args] = detected.startCommand.trim().split(/\s+/);
 
-    // 6. Respond. The request worked, so the build result goes in the body.
-    return res.status(200).json({
+    let started;
+    try {
+      started = await startApp({
+        id,
+        projectPath,
+        start: { command, args },
+        env, // merged into the child's environment by buildEnv()
+      });
+    } catch (err) {
+      if (err instanceof PipelineError) {
+        return res.status(200).json({
+          id,
+          project: req.file.originalname,
+          status: "failed",
+          stage: err.stage,
+          error: err.message,
+          detected,
+          build,
+        });
+      }
+      throw err;
+    }
+
+    keepFiles = true;
+    log.info("deployment running", { id, port: started.port });
+
+    // 7. Respond.
+    return res.status(201).json({
       id,
-      project: req.file.originalname, // display only
-      status: build.success ? "success" : "failed",
+      project: req.file.originalname,
+      status: "running",
+      url: publicUrl(id.slice(0, 8)),
       detected,
       build,
     });
   } catch (err) {
-    // A bad or corrupt zip also lands here.
-    console.error("Deployment error:", err);
+    log.error("deployment error", { err });
     return res.status(500).json({ error: "Internal server error" });
   } finally {
-    // Always remove the uploaded zip and the extracted folder.
     if (req.file) await fs.rm(req.file.path, { force: true });
-    if (workDir) await fs.rm(workDir, { recursive: true, force: true });
+    if (deployDir && !keepFiles) {
+      await fs.rm(deployDir, { recursive: true, force: true });
+    }
   }
 }

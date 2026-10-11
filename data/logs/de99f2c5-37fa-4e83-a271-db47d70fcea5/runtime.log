@@ -1,0 +1,19 @@
+
+> study-assistant-backend@1.0.0 start
+> node src/index.js
+
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+API key should be set when using the Gemini API.
+API key should be set when using the Gemini API.
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+DB Connection Failed MongooseError: The `uri` parameter to `openUri()` must be a string, got "undefined". Make sure the first parameter to `mongoose.connect()` or `mongoose.createConnection()` is a string.
+    at NativeConnection.createClient (/home/nirjal/Projects/my-projects/devdock/devdock-backend/data/apps/de99f2c5-37fa-4e83-a271-db47d70fcea5/study-assistant-backend/node_modules/mongoose/lib/drivers/node-mongodb-native/connection.js:234:11)
+    at NativeConnection.openUri (/home/nirjal/Projects/my-projects/devdock/devdock-backend/data/apps/de99f2c5-37fa-4e83-a271-db47d70fcea5/study-assistant-backend/node_modules/mongoose/lib/connection.js:1086:34)
+    at Mongoose.connect (/home/nirjal/Projects/my-projects/devdock/devdock-backend/data/apps/de99f2c5-37fa-4e83-a271-db47d70fcea5/study-assistant-backend/node_modules/mongoose/lib/mongoose.js:475:15)
+    at connectDB (file:///home/nirjal/Projects/my-projects/devdock/devdock-backend/data/apps/de99f2c5-37fa-4e83-a271-db47d70fcea5/study-assistant-backend/src/config/db.js:5:24)
+    at Server.<anonymous> (file:///home/nirjal/Projects/my-projects/devdock/devdock-backend/data/apps/de99f2c5-37fa-4e83-a271-db47d70fcea5/study-assistant-backend/src/index.js:25:11)
+    at Server.f (/home/nirjal/Projects/my-projects/devdock/devdock-backend/data/apps/de99f2c5-37fa-4e83-a271-db47d70fcea5/study-assistant-backend/node_modules/once/once.js:25:25)
+    at Object.onceWrapper (node:events:630:28)
+    at Server.emit (node:events:521:24)
+    at emitListeningNT (node:net:2051:10)
+    at process.processTicksAndRejections (node:internal/process/task_queues:89:21)

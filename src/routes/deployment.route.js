@@ -1,6 +1,8 @@
 import { Router } from "express";
 import { createDeployment } from "../controllers/deployment.controller.js";
 import multer from "multer";
+import path from "node:path"
+import os from "node:os"
 
 const router = Router();
 
@@ -13,7 +15,6 @@ const upload = multer({
   },
 });
 
-const router = Router();
 router.post("/", upload.single("project"), createDeployment);
 
 export default router;
