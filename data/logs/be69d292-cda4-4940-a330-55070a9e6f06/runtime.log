@@ -1,0 +1,10 @@
+
+> job-portal-backend@1.0.0 start
+> node src/index.js
+
+◇ injected env (3) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+DB Connected
+Server running on port 4000
+DB Connected

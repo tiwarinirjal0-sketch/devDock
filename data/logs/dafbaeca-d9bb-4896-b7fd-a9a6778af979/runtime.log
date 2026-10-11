@@ -1,0 +1,24 @@
+
+> study-assistant-backend@1.0.0 start
+> node src/index.js
+
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+API key should be set when using the Gemini API.
+API key should be set when using the Gemini API.
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+DB Connection Failed MongooseError: The `uri` parameter to `openUri()` must be a string, got "undefined". Make sure the first parameter to `mongoose.connect()` or `mongoose.createConnection()` is a string.
+    at NativeConnection.createClient (/home/nirjal/Projects/my-projects/devdock/devdock-backend/data/apps/dafbaeca-d9bb-4896-b7fd-a9a6778af979/study-assistant-backend/node_modules/mongoose/lib/drivers/node-mongodb-native/connection.js:234:11)
+    at NativeConnection.openUri (/home/nirjal/Projects/my-projects/devdock/devdock-backend/data/apps/dafbaeca-d9bb-4896-b7fd-a9a6778af979/study-assistant-backend/node_modules/mongoose/lib/connection.js:1086:34)
+    at Mongoose.connect (/home/nirjal/Projects/my-projects/devdock/devdock-backend/data/apps/dafbaeca-d9bb-4896-b7fd-a9a6778af979/study-assistant-backend/node_modules/mongoose/lib/mongoose.js:475:15)
+    at connectDB (file:///home/nirjal/Projects/my-projects/devdock/devdock-backend/data/apps/dafbaeca-d9bb-4896-b7fd-a9a6778af979/study-assistant-backend/src/config/db.js:5:24)
+    at Server.<anonymous> (file:///home/nirjal/Projects/my-projects/devdock/devdock-backend/data/apps/dafbaeca-d9bb-4896-b7fd-a9a6778af979/study-assistant-backend/src/index.js:25:11)
+    at Server.f (/home/nirjal/Projects/my-projects/devdock/devdock-backend/data/apps/dafbaeca-d9bb-4896-b7fd-a9a6778af979/study-assistant-backend/node_modules/once/once.js:25:25)
+    at Object.onceWrapper (node:events:630:28)
+    at Server.emit (node:events:521:24)
+    at emitListeningNT (node:net:2051:10)
+    at process.processTicksAndRejections (node:internal/process/task_queues:89:21)
+npm notice
+npm notice New major version of npm available! 11.12.1 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice
